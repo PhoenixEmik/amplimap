@@ -10,6 +10,7 @@ directory to load amplimap from, otherwise the amplimap package installed system
 """
 
 import os
+import shlex
 import shutil
 import sys
 
@@ -27,8 +28,6 @@ from amplimap.version import __title__, __version__
 localrules: all, \
     start_analysis, check_test_variant, \
     copy_probes, copy_snps, copy_targets_bed, convert_targets_csv,
-    link_tagged_bais_1, link_tagged_bais_2, link_tagged_bams, link_unmapped_bams, \
-    convert_mipgen_probes, convert_mipgen_probes_txt, convert_heatseq_probes, \
     link_reads, merge_targets, stats_samples_agg, stats_reads_agg, stats_alignment_agg, coverage_agg, stats_replacements_agg, \
     variants_summary, variants_summary_excel
 
@@ -401,6 +400,7 @@ rule copy_probes:
 
 if os.path.isfile("probes_mipgen.csv"):
     rule convert_mipgen_probes:
+        localrule: True
         input:
             rules.start_analysis.output,
             mipgen = "probes_mipgen.csv"
@@ -413,6 +413,7 @@ if os.path.isfile("probes_mipgen.csv"):
 
 if os.path.isfile("picked_mips.txt"):
     rule convert_mipgen_probes_txt:
+        localrule: True
         input:
             rules.start_analysis.output,
             mipgen = "picked_mips.txt"
@@ -425,6 +426,7 @@ if os.path.isfile("picked_mips.txt"):
 
 if os.path.isfile("probes_heatseq.csv"):
     rule convert_heatseq_probes:
+        localrule: True
         input:
             rules.start_analysis.output,
             heatseq = "probes_heatseq.tsv"
@@ -453,7 +455,7 @@ rule copy_snps:
 rule mask_genome:
     input:
         ref_fasta = get_path('fasta'),
-        mask_bed = config['general']['mask_bed'],
+        mask_bed = [config['general']['mask_bed']] if config['general']['mask_bed'] else [],
     output:
         masked_fasta = 'masked_reference/genome.fa',
         masked_fasta_index = 'masked_reference/genome.fa.fai',
@@ -495,10 +497,12 @@ rule mask_genome_index_bowtie2:
 rule mask_genome_index_star:
     input:
         masked_fasta = 'masked_reference/genome.fa',
-        annotation_gff = get_path('annotation_gff', default = ''),
+        annotation_gff = [get_path('annotation_gff')] if get_path('annotation_gff', default = '') else [],
     output:
         masked_index_directory = 'masked_reference/star/',
         masked_index_file = 'masked_reference/star/Genome',
+    params:
+        annotation_gff = '--sjdbGTFfile {}'.format(shlex.quote(get_path('annotation_gff'))) if get_path('annotation_gff', default = '') else '',
     threads: 4
     shell:
         """
@@ -508,7 +512,7 @@ rule mask_genome_index_star:
             --runMode genomeGenerate \
             --genomeDir {output[masked_index_directory]:q} \
             --genomeFastaFiles {input[masked_fasta]:q} \
-            --sjdbGTFfile {input[annotation_gff]:q} \
+            {params[annotation_gff]} \
             --sjdbOverhang 100 \
         ;
         """ % (load_module_command('star', config))
@@ -583,6 +587,7 @@ if os.path.isdir('reads_in') and config['general']['use_raw_reads']:
 # #### TAGGED, ALIGNED BAMS
 if os.path.isdir('mapped_bams_in'):
     rule link_tagged_bams:
+        localrule: True
         input:
             "mapped_bams_in/{sample_full}.bam",
             config_check = rules.start_analysis.output
@@ -616,6 +621,7 @@ if os.path.isdir('mapped_bams_in'):
             })
 
     rule link_tagged_bais_1:
+        localrule: True
         input:
             "mapped_bams_in/{sample_full}.bam.bai",
         output:
@@ -626,6 +632,7 @@ if os.path.isdir('mapped_bams_in'):
             os.symlink(os.path.join("..", "..", input[0]), output[0])
 
     rule link_tagged_bais_2:
+        localrule: True
         input:
             "mapped_bams_in/{sample_full}.bai",
         output:
@@ -638,6 +645,7 @@ if os.path.isdir('mapped_bams_in'):
 # #### IDT INPUT
 if os.path.isdir('unmapped_bams_in'):
     rule link_unmapped_bams:
+        localrule: True
         input:
             "unmapped_bams_in/{sample_full}.bam",
             config_check = rules.start_analysis.output

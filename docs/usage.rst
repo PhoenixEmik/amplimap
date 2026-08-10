@@ -374,7 +374,9 @@ parameter:
     amplimap --cluster=qsub --njobs=5
 
 To use other cluster environments (such as LSF), add an entry with the submission command
-to the ``clusters:`` section of the config file.
+to the ``clusters:`` section of the config file. amplimap uses Snakemake's
+``cluster-sync`` executor plugin for ``command_sync`` entries and its
+``cluster-generic`` executor plugin for ``command_nosync`` entries.
 
 Cluster log files
 ^^^^^^^^^^^^^^^^^^

@@ -115,9 +115,9 @@ annotate:
     operations: 'g,f,f,f,f,f,f,f,f,f,f'
 
 # cluster submission commands. you can specify multiple cluster commands here, each with their own name.
-# if you specify the command as 'cluster_sync' it should pause until the job is completed,
-# if you specify it as 'cluster_nosync' it does not need to.
-# these will be used as the value of the --cluster or --cluster-sync parameters to Snakemake
+# if you specify command_sync, it should pause until the job is completed;
+# command_nosync should submit the job and return its job ID immediately.
+# these are passed to the Snakemake cluster-sync or cluster-generic executor plugin
 # logfiles should be placed into a directory called '{workflow.workdir_init}/cluster_log' which will
 # be created automatically on execution
 clusters:

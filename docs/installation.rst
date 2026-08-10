@@ -4,9 +4,8 @@ Installation through pip
 ------------------------
 If you already have all of the required external software available (see below)
 you can install amplimap directly through pip.
-Please note that this **requires Python 3.5 or 3.6** and does not currently
-work with Python 3.7 due to problems with the pysam package. It also
-does not work with any Python version lower than 3.5.
+Please note that this **requires Python 3.11 or newer**. This requirement
+comes from Snakemake 8+ and its cluster executor plugins.
 
 If you do not have the dependencies and the right version of Python available
 please see our :doc:`extended_installation` to install amplimap through Miniconda.
@@ -32,8 +31,7 @@ If this does not work, you can try to install it manually:
 
 
 You can also :download:`download our requirements.txt file <../requirements.txt>`,
-which contains a full list of all Python packages used by amplimap, and a known
-working version.
+which contains the supported version ranges for amplimap's Python dependencies.
 
 Setup
 ~~~~~~~~~
@@ -46,7 +44,7 @@ Requirements
 ~~~~~~~~~~~~~~~
 
 - Linux environment (should also work on MacOS, Windows 10 Linux Subsystem)
-- Python 3.5+ with setuptools, Cython and numpy
+- Python 3.11+ with setuptools, Cython and numpy
 
   - Further Python dependencies are listed in ``requirements.txt`` but can also be installed automatically by ``setup.py``
 

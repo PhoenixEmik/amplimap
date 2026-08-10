@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import sys
-if sys.version_info[0] < 3:
-    sys.exit("Sorry, amplimap requires at least Python 3")
+if sys.version_info < (3, 11):
+    sys.exit("Sorry, amplimap requires at least Python 3.11")
 
 from setuptools import setup, find_packages, Extension
 
@@ -49,12 +49,15 @@ setup(
         'Operating System :: MacOS',
         'Operating System :: Unix',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.11',
     ],
 
-    python_requires='>=3',
+    python_requires='>=3.11',
 
     install_requires=[
-        'snakemake>=7.32.4,<8',
+        'snakemake>=8.6,<10',
+        'snakemake-executor-plugin-cluster-generic>=1,<2',
+        'snakemake-executor-plugin-cluster-sync>=0.1,<1',
         'pyyaml>=6,<7',
         'numpy>=1.26,<2',
         'biopython>=1.84,<2',

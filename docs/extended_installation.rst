@@ -4,7 +4,7 @@ Installation guide
 
 We recommend that you use `Miniconda <https://conda.io/en/latest/miniconda.html>`_
 with `bioconda <https://bioconda.github.io/>`_ to install amplimap and its requirements
-(such as Python 3.6, read aligners, etc). If you have `Docker <https://www.docker.com/>`_ you can
+(such as Python 3.11, read aligners, etc). If you have `Docker <https://www.docker.com/>`_ you can
 also use our Dockerfile instead: :ref:`installation-docker`.
 
 If your machine already has all of the required
@@ -198,9 +198,8 @@ Installing amplimap through pip
 If you already have all of the required external software available
 (see :ref:`installation-requirements`)
 you can install amplimap directly through pip.
-Please note that this **requires Python 3.5 or 3.6** and does not currently
-work with Python 3.7 due to problems with the pysam package. It also
-does not work with any Python version lower than 3.5.
+Please note that this **requires Python 3.11 or newer**. This requirement
+comes from Snakemake 8+ and its cluster executor plugins.
 
 If you do not have the dependencies and the right version of Python available
 please see :ref:`installation-miniconda`.
@@ -226,8 +225,7 @@ If this does not work, you can try to install it manually:
 
 
 You can also :download:`download our requirements.txt file <../requirements.txt>`,
-which contains a full list of all Python packages used by amplimap, and a known
-working version.
+which contains the supported version ranges for amplimap's Python dependencies.
 
 To finish setting up amplimap you probably want to add the paths to the
 reference genome files you will be using
@@ -243,7 +241,7 @@ all requirements **will be installed automatically** when you install amplimap
 through conda.
 
 - Linux environment (should also work on MacOS, Windows 10 Linux Subsystem)
-- Python 3.5 or 3.6 with setuptools, Cython and numpy
+- Python 3.11+ with setuptools, Cython and numpy
 
   - Further Python dependencies are listed in ``requirements.txt``
     but can also be installed automatically by ``setup.py``.

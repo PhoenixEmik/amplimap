@@ -6,14 +6,100 @@ as well as some helper functions for reading and checking the config files.
 """
 
 import os
+import shlex
+import subprocess
 import sys
 
-import snakemake
 import argparse
 import yaml
 
 from .version import __title__, __version__
 from .reader import AmplimapReaderException, read_new_probe_design, process_probe_design, read_and_convert_mipgen_probes, read_and_convert_heatseq_probes, read_targets, read_snps_txt
+
+
+def update_config(config, overwrite_config):
+    """Recursively merge overwrite_config into config in place."""
+    for key, value in overwrite_config.items():
+        if (
+            key in config
+            and isinstance(config[key], dict)
+            and isinstance(value, dict)
+        ):
+            update_config(config[key], value)
+        else:
+            config[key] = value
+
+
+def parse_snakemake_args(value):
+    """Parse additional Snakemake CLI arguments."""
+    if not value:
+        return []
+    return shlex.split(value)
+
+
+def build_snakemake_command(
+    snakefile,
+    configfile,
+    workdir,
+    targets,
+    run,
+    ncores,
+    njobs,
+    unlock,
+    latency_wait,
+    cluster_command_nosync=None,
+    cluster_command_sync=None,
+    extra_args=None,
+):
+    """Build a Snakemake 8+ command line for local or cluster execution."""
+    if cluster_command_nosync and cluster_command_sync:
+        raise ValueError('Only one cluster submission command can be configured')
+
+    command = [
+        sys.executable,
+        '-m',
+        'snakemake',
+        '--snakefile',
+        os.path.abspath(snakefile),
+        '--configfile',
+        os.path.abspath(configfile),
+        '--directory',
+        os.path.abspath(workdir),
+        '--latency-wait',
+        str(latency_wait),
+        '--jobname',
+        '{}.{{rulename}}.{{jobid}}.sh'.format(__title__),
+    ]
+
+    if cluster_command_sync:
+        command.extend([
+            '--executor',
+            'cluster-sync',
+            '--cluster-sync-submit-cmd',
+            cluster_command_sync,
+            '--jobs',
+            str(njobs),
+        ])
+    elif cluster_command_nosync:
+        command.extend([
+            '--executor',
+            'cluster-generic',
+            '--cluster-generic-submit-cmd',
+            cluster_command_nosync,
+            '--jobs',
+            str(njobs),
+        ])
+    else:
+        command.extend(['--cores', str(ncores)])
+
+    if not run:
+        command.append('--dry-run')
+    if unlock:
+        command.append('--unlock')
+
+    command.extend(extra_args or [])
+    command.extend(targets)
+    return command
 
 def check_config_keys(default_config, my_config, path = []):
     """Recursively check that config keys provided in my_config also exist in default_config (ignoring 'paths' and 'clusters')."""
@@ -106,7 +192,7 @@ def main(argv = None):
         parser.add_argument("--ncores", help="number of local cores to run in parallel (only applies if --cluster is NOT set)", default=1, type=int)
         parser.add_argument("--njobs", help="number of cluster jobs to run in parallel (only applies if --cluster is set)", default=10, type=int)
         parser.add_argument("--latency-wait", help="How long to wait for output files to appear after job completes. Increase this if you get errors about missing output files. (Snakemake parameter)", default=5, type=int)
-        parser.add_argument("--snakemake-args", help="For debugging: Extra arguments to the snakemake function (comma-separated key=value pairs - eg. 'printreason=True')")
+        parser.add_argument("--snakemake-args", help="For debugging: Extra Snakemake command-line arguments as a quoted shell-style string")
         parser.add_argument("--debug", help="debug mode", action="store_true")
         # parser.add_argument("--debug-dag", help="debug DAG", action="store_true")
         parser.add_argument("TARGET", help="targets to run (eg. pileups variants coverages)", nargs="*")
@@ -176,7 +262,7 @@ def main(argv = None):
                 sys.stderr.write('Please check their spelling and location and try again.\n')
                 return 1
 
-            snakemake.utils.update_config(config, my_config)
+            update_config(config, my_config)
 
         # check basic config
         aligners = ['naive', 'bwa', 'bowtie2', 'star']  # allowed values for the aligner
@@ -369,32 +455,25 @@ def main(argv = None):
         else:
             sys.stderr.write('Running locally with {} cores\n'.format(args.ncores))
 
-        extra_snakemake_args = {}
-        if args.snakemake_args:
-            extra_snakemake_args = {
-                kv[0]: (True if kv[1].lower() == 'true' else False if kv[1].lower() == 'false' else kv[1])
-                for kv in [
-                    x.split('=') for x in args.snakemake_args.split(',')
-                ]
-            }
-
+        extra_snakemake_args = parse_snakemake_args(args.snakemake_args)
+        if extra_snakemake_args:
             sys.stderr.write('Using extra Snakemake arguments: {}\n'.format(str(extra_snakemake_args)))
 
-        success = snakemake.snakemake(
-            snakefile = os.path.join(basedir, "Snakefile"),
-            configfiles = [configfile],
-            cores = args.ncores,  # ignored if cluster
-            nodes = args.njobs,  # ignored if not cluster
-            workdir = args.working_directory,
-            targets = args.TARGET,
-            dryrun = not args.run,
-            cluster = cluster_command_nosync,
-            cluster_sync = cluster_command_sync,
-            jobname = "{}.{{rulename}}.{{jobid}}.sh".format(__title__),
-            unlock = args.unlock,
-            latency_wait = args.latency_wait,
-            **extra_snakemake_args
+        snakemake_command = build_snakemake_command(
+            snakefile=os.path.join(basedir, "Snakefile"),
+            configfile=configfile,
+            workdir=args.working_directory,
+            targets=args.TARGET,
+            run=args.run,
+            ncores=args.ncores,
+            njobs=args.njobs,
+            unlock=args.unlock,
+            latency_wait=args.latency_wait,
+            cluster_command_nosync=cluster_command_nosync,
+            cluster_command_sync=cluster_command_sync,
+            extra_args=extra_snakemake_args,
         )
+        success = subprocess.call(snakemake_command) == 0
 
         sys.stderr.write('\n===============================================\n\n')
         if success:
