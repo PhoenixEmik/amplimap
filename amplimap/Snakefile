@@ -831,7 +831,7 @@ rule stats_samples_agg:
             if merged is None:
                 merged = df
             else:
-                merged = merged.append(df, ignore_index = True)
+                merged = pd.concat([merged, df], ignore_index = True)
 
         print('Merged data shape:', str(merged.shape))
         merged.sort_values(['sample'], inplace=True)
@@ -877,7 +877,7 @@ rule stats_reads_agg:
                 if merged is None:
                     merged = df
                 else:
-                    merged = merged.append(df, ignore_index = True)
+                    merged = pd.concat([merged, df], ignore_index = True)
             except pd.errors.EmptyDataError:
                 print('No data for', file, ', skipping.')
 

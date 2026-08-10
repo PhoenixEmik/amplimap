@@ -239,7 +239,7 @@ def merge_variants_from_annovar(input, output):
                 if merged is None:
                     merged = df
                 else:
-                    merged = merged.append(df, ignore_index = True)
+                    merged = pd.concat([merged, df], ignore_index = True)
             else:
                 print ('Ignoring - empty!')
         except pd.errors.EmptyDataError:
@@ -285,7 +285,7 @@ def merge_variants_unannotated(input_vcfs, output_file):
                 if merged is None:
                     merged = df
                 else:
-                    merged = merged.append(df, ignore_index = True)
+                    merged = pd.concat([merged, df], ignore_index = True)
             else:
                 print('Ignoring - empty!')
 

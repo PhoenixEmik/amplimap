@@ -382,7 +382,7 @@ def main(argv = None):
 
         success = snakemake.snakemake(
             snakefile = os.path.join(basedir, "Snakefile"),
-            configfile = configfile,
+            configfiles = [configfile],
             cores = args.ncores,  # ignored if cluster
             nodes = args.njobs,  # ignored if not cluster
             workdir = args.working_directory,

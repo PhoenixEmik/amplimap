@@ -73,7 +73,7 @@ def aggregate(input, output):
         if merged is None:
             merged = df
         else:
-            merged = merged.append(df, ignore_index = True)
+            merged = pd.concat([merged, df], ignore_index = True)
 
     assert merged is not None, \
         '\n\nABORTED: Did not find any coverage data!\n\n'

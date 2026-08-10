@@ -34,7 +34,7 @@ def find_umi_groups(umi_counts: dict, id_offset = 0) -> dict:
         assert isinstance(next(iter(umi_counts.keys())), (bytes, bytearray))
 
         processor = umi_tools.network.UMIClusterer('directional')
-        umi_groups = processor(umi_counts.keys(), umi_counts, threshold=1) #TODO: this should be --edit-distance-threshold, defaults to 1 in Utilities.py
+        umi_groups = processor(umi_counts, threshold=1)
         for umi_group_id, umi_group_members in enumerate(umi_groups):
             for raw_umi in umi_group_members:
                 umi_to_group[raw_umi] = id_offset + umi_group_id

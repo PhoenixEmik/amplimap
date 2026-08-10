@@ -118,7 +118,7 @@ def stats_replacements_agg(input, output):
             if merged is None:
                 merged = df
             else:
-                merged = merged.append(df, ignore_index = True)
+                merged = pd.concat([merged, df], ignore_index = True)
         except pd.errors.EmptyDataError:
             print('No data for', file, ', skipping.')
 

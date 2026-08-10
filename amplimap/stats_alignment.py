@@ -93,7 +93,7 @@ def aggregate(folder):
             if agg is None:
                 agg = df
             else:
-                agg = agg.append(df)
+                agg = pd.concat([agg, df])
         except pd.errors.EmptyDataError:
             log.exception("No data found: %s", file)
 
@@ -498,7 +498,7 @@ def process_file(
             axis=1)
         # set and sort by probe name (row index)
         df.index.rename('probe', inplace=True)
-        df.sort_index(0, inplace=True)
+        df.sort_index(axis=0, inplace=True)
 
         # ASSERTIONS
         # read_pairs_total should be == read_pairs_total from stats_overview
